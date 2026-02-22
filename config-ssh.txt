@@ -1,0 +1,6 @@
+Host TFG-ec2
+    HostName ec2-52-87-253-125.compute-1.amazonaws.com
+    User ec2-user
+    IdentityFile C:/Users/jose2/.ssh/api-ssh.pem
+    IdentitiesOnly yes
+    ServerAliveInterval 60

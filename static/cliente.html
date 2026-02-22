@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>CloudFinance – Portal de Cliente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --muted: #94a3b8; --line: #334155;
+      --accent: #6366f1; --accent-hover: #4f46e5; --text: #f8fafc;
+      --success: #22c55e; --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: 'Inter', sans-serif;
+      background-color: var(--bg); color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 1rem 1.5rem; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; }
+    
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .badge {
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      color: white; padding: 0.3rem 0.7rem; border-radius: 8px;
+      font-weight: 700; font-size: 0.85rem;
+    }
+    nav { display: flex; gap: 1.5rem; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 500; transition: 0.2s; }
+    nav a:hover { color: var(--text); }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 2rem; }
+    @media (min-width: 900px) { .grid { grid-template-columns: 1.2fr 0.8fr; } }
+
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    h2 { font-size: 1.1rem; margin: 0 0 1rem 0; color: #c7d2fe; }
+
+    /* Tablas y Listas */
+    .table-container { border-radius: 8px; border: 1px solid var(--line); overflow: hidden; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { background: #0f172a; padding: 0.8rem; color: var(--muted); text-transform: uppercase; font-size: 0.7rem; }
+    td { padding: 0.8rem; border-bottom: 1px solid var(--line); }
+    
+    .amount-pos { color: var(--success); font-weight: 600; }
+    .amount-neg { color: var(--danger); font-weight: 600; }
+
+    /* Formulario */
+    .input-group { display: flex; flex-direction: column; gap: 0.75rem; }
+    input {
+      background: #0f172a; border: 1px solid var(--line);
+      color: white; padding: 0.6rem; border-radius: 8px; outline: none; width: 100%;
+    }
+    input:focus { border-color: var(--accent); }
+
+    .btn {
+      padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600;
+      cursor: pointer; transition: 0.2s; border: 1px solid transparent;
+      font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+    .btn-ghost:hover { background: var(--line); }
+
+    .list-reports { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .list-reports li {
+      background: #0f172a; padding: 0.75rem; border-radius: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <span class="badge">CloudFinance</span>
+        <span style="color:var(--muted); font-size: 0.9rem">Portal Cliente</span>
+      </div>
+      <nav>
+        <a href="/">Inicio</a>
+        <a href="/perfil">Mi Perfil</a>
+        <a href="/logout" style="color:var(--danger)">Salir</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap grid">
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Mis movimientos</h2>
+        <button class="btn btn-ghost" id="btn-load">🔄 Actualizar</button>
+      </div>
+
+      <div style="display:flex; gap:0.5rem; margin-top:0.5rem">
+        <span style="background: #0f172a; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem;">
+          <b id="kpi-total">0</b> registros
+        </span>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Operación</th><th>Cantidad</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1rem">
+        <button class="btn btn-ghost" id="prev">Anterior</button>
+        <button class="btn btn-ghost" id="next">Siguiente</button>
+      </div>
+      <p id="msg" style="font-size: 0.8rem; margin-top: 1rem;"></p>
+    </section>
+
+    <section style="display:flex; flex-direction:column; gap:1.5rem">
+      
+      <div class="card">
+        <h2>Nuevo movimiento</h2>
+        <div class="input-group">
+          <input id="tipo" placeholder="Concepto (ej. Pago factura)" />
+          <input id="cantidad" type="number" step="0.01" placeholder="Importe (ej. -50.00)" />
+          <button class="btn btn-primary" id="btn-add" style="justify-content:center">Añadir Registro</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Mis informes (S3)</h2>
+        <button class="btn btn-ghost" id="btn-informes" style="width:100%; justify-content:center; margin-bottom:1rem">
+          Listar archivos disponibles
+        </button>
+        <ul id="ul" class="list-reports"></ul>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const fmt = s => s ? new Date(s).toLocaleString() : "";
+    let offset=0, limit=20, total=0;
+
+    async function loadMovs(){
+      const msg = document.getElementById('msg');
+      msg.textContent="Cargando datos...";
+      try{
+        const r = await fetch(`/cliente/movimientos?limit=${limit}&offset=${offset}`);
+        const json = await r.json();
+        const data = json.data || [];
+        
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = data.map(m => `
+          <tr>
+            <td class="muted">#${m.id}</td>
+            <td>${m.tipo || '---'}</td>
+            <td class="${m.cantidad < 0 ? 'amount-neg' : 'amount-pos'}">
+              ${m.cantidad.toLocaleString('es-ES', {minimumFractionDigits:2})} €
+            </td>
+            <td class="muted">${fmt(m.fecha)}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('kpi-total').textContent = json.total || 0;
+        msg.textContent="";
+      } catch(e){ msg.style.color="var(--danger)"; msg.textContent="Error de conexión."; }
+    }
+
+    async function addMov(){
+      try {
+        const tipo = document.getElementById('tipo').value.trim();
+        const cantidad = parseFloat(document.getElementById('cantidad').value);
+        if(!tipo || isNaN(cantidad)) return;
+
+        const r = await fetch('/cliente/movimientos/nuevo', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({tipo_operacion:tipo, cantidad})
+        });
+        if(r.ok) {
+          document.getElementById('tipo').value = "";
+          document.getElementById('cantidad').value = "";
+          offset = 0;
+          loadMovs();
+        }
+      } catch(e) {}
+    }
+
+    async function listInformes(){
+      const ul = document.getElementById('ul');
+      ul.innerHTML = '<li class="muted">Consultando repositorio...</li>';
+      try {
+        const r = await fetch('/cliente/informes');
+        const data = await r.json();
+        ul.innerHTML = data.map(i => `
+          <li>
+            <div style="font-size:0.75rem">
+              <b>${i.tipo_informe}</b><br/><span class="muted">${fmt(i.fecha)}</span>
+            </div>
+            ${i.download_url ? `<a href="${i.download_url}" target="_blank" class="btn btn-ghost" style="font-size:0.6rem; padding:0.3rem">Bajar</a>` : '---'}
+          </li>
+        `).join('');
+      } catch(e) { ul.innerHTML = '<li class="amount-neg">Error al listar.</li>'; }
+    }
+
+    document.getElementById('btn-load').onclick = loadMovs;
+    document.getElementById('btn-add').onclick = addMov;
+    document.getElementById('btn-informes').onclick = listInformes;
+    document.getElementById('prev').onclick = () => { offset=Math.max(0,offset-limit); loadMovs(); };
+    document.getElementById('next').onclick = () => { offset+=limit; loadMovs(); };
+
+    loadMovs();
+  </script>
+</body>
+</html>

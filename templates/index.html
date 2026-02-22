@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudFinance - Gestión Inteligente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #6366f1; /* Indigo moderno para el TFG */
+            --accent-hover: #4f46e5;
+            --text: #334155;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --danger: #ef4444;
+            --audit-gold: #f59e0b; /* Color para resaltar el perfil de auditoría */
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--card-bg);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .brand span { color: var(--accent); }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .hero-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 { margin: 0 0 0.5rem 0; color: var(--primary); font-size: 1.85rem; }
+        p.subtitle { color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem; }
+
+        .user-welcome {
+            background: #f1f5f9;
+            padding: 0.5rem 1.25rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        .dash-link {
+            padding: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            color: var(--primary);
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .dash-link:hover {
+            border-color: var(--accent);
+            background-color: #f5f7ff;
+            transform: translateY(-2px);
+        }
+
+        /* Estilo especial para el Portal de Auditoría (Staff) */
+        .dash-link.audit-mode {
+            grid-column: 1 / -1; /* Ocupa todo el ancho */
+            border: 2px solid var(--accent);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .dash-link.audit-mode:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .dash-link strong { font-size: 1rem; display: block; }
+        .dash-link small { color: #64748b; font-size: 0.75rem; }
+        .audit-badge { 
+            background: var(--accent); 
+            color: white; 
+            font-size: 0.65rem; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            text-transform: uppercase;
+            width: fit-content;
+            margin-bottom: 4px;
+        }
+
+        .btn {
+            display: block;
+            background-color: var(--accent);
+            color: white;
+            padding: 0.85rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: var(--danger);
+            margin-top: 1rem;
+        }
+
+        .btn-logout:hover { background: #fef2f2; border-color: #fecaca; }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/" class="brand">Cloud<span>Finance</span></a>
+    </header>
+
+    <main>
+        <div class="hero-card">
+            {% if user %}
+                <div class="user-welcome">
+                    Autenticado como: <strong>{{ user.name or user.email }}</strong>
+                </div>
+                
+                <h1>Panel de Control</h1>
+                <p class="subtitle">Gestión centralizada de activos y cumplimiento normativo.</p>
+
+                <div class="dashboard-grid">
+                    
+                    {% if is_client %}
+                        <a href="/cliente" class="dash-link">
+                            <strong>Portal Cliente</strong>
+                            <small>Resumen de movimientos y gráficos.</small>
+                        </a>
+                        <a href="/perfil" class="dash-link">
+                            <strong>Mi Perfil</strong>
+                            <small>Seguridad y datos personales.</small>
+                        </a>
+                    {% endif %}
+
+                    {% if is_staff %}
+                        <a href="/internal" class="dash-link audit-mode">
+                            <span class="audit-badge">Acceso Staff</span>
+                            <strong>🛡️ Portal de Auditoría Interna</strong>
+                            <small>Supervisión RDS, Ingesta S3 y Analítica con AWS Athena.</small>
+                        </a>
+                    {% endif %}
+
+                </div>
+
+                <a href="/logout" class="btn btn-logout">Cerrar Sesión Segura</a>
+
+            {% else %}
+                <h1>Gestión Financiera Segura</h1>
+                <p class="subtitle">
+                    Plataforma Zero Trust basada en AWS para la custodia de activos financieros y auditoría inteligente de logs.
+                </p>
+                <a href="/login" class="btn">Acceder con SSO & MFA</a>
+                <p style="margin-top: 1.5rem; font-size: 0.75rem; color: #94a3b8;">
+                    Certificado conforme a políticas de seguridad IAM & KMS
+                </p>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 CloudFinance S.L.
+    </footer>
+
+</body>
+</html>

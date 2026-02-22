@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>CloudFinance – Dashboard de Administración</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --muted: #94a3b8; --line: #334155;
+      --accent: #6366f1; --accent-hover: #4f46e5; --text: #f8fafc;
+      --success: #22c55e; --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: 'Inter', sans-serif;
+      background-color: var(--bg); color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .wrap { max-width: 1300px; margin: 0 auto; padding: 1rem 1.5rem; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; }
+    .badge {
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      color: white; padding: 0.3rem 0.7rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+    }
+    nav { display: flex; gap: 1.5rem; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 500; }
+    
+    .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 2rem; }
+    @media (min-width: 1024px) { .grid { grid-template-columns: 1.4fr 0.6fr; } }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem; }
+    h2 { font-size: 1.25rem; margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 0.5rem; }
+
+    .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid var(--line); background: #0f172a; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    th { background: #1e293b; padding: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; }
+    td { padding: 0.8rem; border-bottom: 1px solid var(--line); }
+    
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.5rem 0.9rem; border-radius: 8px; font-weight: 600;
+      cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-size: 0.8rem;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--text); }
+    
+    input { background: #0f172a; border: 1px solid var(--line); color: white; padding: 0.5rem; border-radius: 8px; outline: none; font-size: 0.8rem; }
+    .amount-pos { color: var(--success); font-weight: 600; }
+    .amount-neg { color: var(--danger); font-weight: 600; }
+    .status-msg { margin-top: 1rem; font-size: 0.8rem; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="wrap">
+      <div class="brand"><span class="badge">CLOUDFINANCE</span><span style="color:var(--muted); margin-left:10px">Internal Audit v2.1</span></div>
+      <nav><a href="/">Inicio</a><a href="/logout" style="color:var(--danger)">Cerrar Sesión</a></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      
+      <section class="card" id="sec-movimientos">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h2>📊 Auditoría de Movimientos</h2>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-outline" id="btn-refresh">🔄 Sincronizar</button>
+            <button class="btn btn-primary" id="btn-export">📥 Exportar CSV (KMS)</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="tabla-movimientos">
+            <thead><tr><th>ID</th><th>Cliente</th><th>Operación</th><th>Cantidad</th><th>Fecha</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="status-mov" class="status-msg"></div>
+      </section>
+
+      <section class="card" id="sec-informes">
+        <h2>📂 Gestión de Informes</h2>
+        <div id="admin-actions-informes" style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem;">
+          <input type="text" id="input-cliente" placeholder="Nombre del cliente...">
+          <button class="btn btn-primary" style="justify-content:center" id="btn-generar-informe">Generar Informe en S3</button>
+        </div>
+        <button class="btn btn-outline" style="width:100%; justify-content:center; margin-bottom:1rem;" id="btn-list-reports">Listar Historial de Informes</button>
+        <ul id="reports-ul" style="list-style:none; padding:0; display:flex; flex-direction:column; gap:0.5rem;"></ul>
+      </section>
+
+      <section class="card" id="sec-athena" style="grid-column: 1 / -1;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>🛡️ Inteligencia de Seguridad (AWS Athena)</h2>
+          <div style="display:flex; gap:1rem; align-items:center;">
+             <div style="display:flex; gap:0.5rem; align-items:center;">
+                <span class="muted" style="font-size:0.75rem">Ventana (min):</span>
+                <input type="number" id="win-min" value="60" style="width:60px">
+             </div>
+             <button class="btn btn-outline" id="btn-sec-ips">🔍 Analizar IPs Sospechosas</button>
+             <button class="btn btn-outline" id="btn-sec-denied" style="border-color:var(--danger); color:var(--danger)">🚫 Detectar Ataques (403)</button>
+          </div>
+        </div>
+        
+        <div id="sec-status" class="status-msg" style="margin-bottom:0.5rem"></div>
+
+        <div id="athena-results" class="table-container" style="max-height:400px; min-height:100px;">
+          <p class="muted" style="padding:2rem; text-align:center;">Ejecuta un análisis para consultar los logs de CloudTrail y CloudFront...</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // --- LÓGICA DE CONTROL DE ACCESO (RBAC) ---
+    // Recuperamos los grupos inyectados desde app.py
+    const userGroups = {{ groups | tojson if groups else [] }};
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const isAdmin = userGroups.includes("admin-ti");
+        const isAnalista = userGroups.includes("analista-datos");
+        const isFinanzas = userGroups.includes("Finanzas-lectura");
+
+        // Regla 1: El Analista solo ve Seguridad y Logs. No ve Movimientos RDS.
+        if (!isAdmin && isAnalista) {
+            document.getElementById("sec-movimientos").style.display = "none";
+        }
+
+        // Regla 2: Finanzas solo ve datos financieros. No ve Seguridad/Athena.
+        if (!isAdmin && isFinanzas) {
+            document.getElementById("sec-athena").style.display = "none";
+        }
+
+        // Regla 3: Restricción de Creación. Solo Admin puede generar informes o exportar.
+        if (!isAdmin) {
+            document.getElementById("admin-actions-informes").style.display = "none";
+            document.getElementById("btn-export").style.display = "none";
+        }
+    });
+
+    // --- Utilidades ---
+    const showMsg = (id, text, type) => {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.style.color = type === 'error' ? 'var(--danger)' : (type === 'success' ? 'var(--success)' : 'var(--muted)');
+    };
+
+    // --- 1. Lógica Athena ---
+    async function callAthena(endpoint) {
+      const resultsDiv = document.getElementById('athena-results');
+      const statusSec = document.getElementById('sec-status');
+      const windowMin = document.getElementById('win-min').value || 60;
+      
+      statusSec.textContent = "Consultando Athena (esto puede tardar unos segundos)...";
+      resultsDiv.innerHTML = '<div style="padding:2rem; text-align:center;">Analizando Big Data en S3...</div>';
+
+      try {
+        const r = await fetch(`${endpoint}?window=${windowMin}`);
+        const data = await r.json();
+        const rows = data.items || data.series || [];
+
+        if (rows.length === 0) {
+          resultsDiv.innerHTML = '<p class="muted" style="padding:2rem; text-align:center;">No se detectaron amenazas en este periodo.</p>';
+          statusSec.textContent = "Consulta finalizada sin hallazgos.";
+          return;
+        }
+
+        const cols = Object.keys(rows[0]);
+        let html = '<table><thead><tr>';
+        cols.forEach(c => html += `<th>${c.toUpperCase()}</th>`);
+        html += '</tr></thead><tbody>';
+
+        rows.forEach(row => {
+          html += '<tr>';
+          cols.forEach(c => {
+            let val = row[c];
+            if (c.includes('score') && val > 5) html += `<td class="amount-neg">${Number(val).toFixed(2)}</td>`;
+            else html += `<td>${val ?? ''}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        resultsDiv.innerHTML = html;
+        statusSec.textContent = `Análisis completado: ${rows.length} registros encontrados.`;
+        
+      } catch (e) {
+        statusSec.textContent = "Error al conectar con el módulo de IA.";
+        resultsDiv.innerHTML = '<p class="amount-neg" style="padding:2rem; text-align:center;">Fallo en la ejecución de la consulta Athena.</p>';
+      }
+    }
+
+    // --- 2. Lógica RDS (Movimientos) ---
+    async function loadMovements() {
+      showMsg('status-mov', 'Sincronizando con RDS...');
+      const r = await fetch('/movimientos');
+      const json = await r.json();
+      document.querySelector('#tabla-movimientos tbody').innerHTML = (json.data || []).map(m => `
+        <tr>
+          <td>#${m.id}</td><td>${m.cliente}</td><td>${m.tipo}</td>
+          <td class="${m.cantidad < 0 ? 'amount-neg' : 'amount-pos'}">${m.cantidad.toFixed(2)} €</td>
+          <td class="muted">${new Date(m.fecha).toLocaleString()}</td>
+        </tr>`).join('');
+      showMsg('status-mov', '');
+    }
+
+    // --- 3. Lógica S3 (Informes) ---
+    async function generarInforme() {
+      const cliente = document.getElementById('input-cliente').value.trim();
+      if (!cliente) return showMsg('status-mov', 'Escribe el nombre del cliente.', 'error');
+      showMsg('status-mov', 'Generando informe cifrado...');
+      const r = await fetch('/informes/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliente: cliente })
+      });
+      if (r.ok) { showMsg('status-mov', '¡Informe listo en S3!', 'success'); listReports(); }
+      else { const e = await r.json(); showMsg('status-mov', e.error, 'error'); }
+    }
+
+    async function listReports() {
+      const ul = document.getElementById('reports-ul');
+      ul.innerHTML = '<li class="muted">Listando archivos...</li>';
+      const r = await fetch('/informes');
+      const data = await r.json();
+      ul.innerHTML = data.map(i => `
+        <li style="background:#0f172a; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:0.8rem"><b>${i.cliente}</b><br><span class="muted">${new Date(i.fecha).toLocaleDateString()}</span></div>
+          <a href="${i.download_url}" target="_blank" class="btn btn-outline" style="font-size:0.7rem">Bajar</a>
+        </li>`).join('');
+    }
+
+    // --- Eventos de Botones ---
+    document.getElementById('btn-sec-ips').onclick = () => callAthena('/sec/ip-sospechosas');
+    document.getElementById('btn-sec-denied').onclick = () => callAthena('/sec/spike-denegados');
+    document.getElementById('btn-generar-informe').onclick = generarInforme;
+    document.getElementById('btn-list-reports').onclick = listReports;
+    document.getElementById('btn-refresh').onclick = loadMovements;
+    document.getElementById('btn-export').onclick = async () => {
+        const r = await fetch('/export/csv');
+        const data = await r.json();
+        if(data.download_url) window.location.href = data.download_url;
+    };
+
+    // Carga inicial según permisos
+    loadMovements();
+    listReports();
+  </script>
+</body>
+</html>
