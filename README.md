@@ -1,4 +1,5 @@
-TFG: Infraestructura Cloud Resiliente y Detección Heurística para Entornos Fintech
+TFG: Infraestructura Cloud Resiliente y Detección Heurística para Entornos Fintech.
+
 Este repositorio contiene el código fuente y la configuración técnica desarrollada como parte del Trabajo de Fin de Grado (TFG) en Ciberseguridad/Ingeniería. El proyecto aborda el diseño y despliegue de una infraestructura segura en Amazon Web Services (AWS) para la organización ficticia CloudFinance S.L., aplicando los pilares del AWS Well-Architected Framework y estrategias de defensa en profundidad.
 
 🛡️ Módulo de Inteligencia de Amenazas y Detección Heurística
