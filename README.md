@@ -1,34 +1,62 @@
-TFG: Infraestructura Cloud Resiliente y Detección Heurística para Entornos Fintech.
+# 🛡️ TFG – Infraestructura Cloud Resiliente y Detección Heurística para Entornos Fintech
 
-Este repositorio contiene el código fuente y la configuración técnica desarrollada como parte del Trabajo de Fin de Grado (TFG) en Ciberseguridad/Ingeniería. El proyecto aborda el diseño y despliegue de una infraestructura segura en Amazon Web Services (AWS) para la organización ficticia CloudFinance S.L., aplicando los pilares del AWS Well-Architected Framework y estrategias de defensa en profundidad.
+Repositorio que contiene el código fuente y la configuración técnica desarrollada como parte del **Trabajo de Fin de Grado (TFG) en Ingeniería/Ciberseguridad**.
 
-🛡️ Módulo de Inteligencia de Amenazas y Detección Heurística
-El proyecto implementa una capa de seguridad activa orientada a la detección temprana y el análisis forense utilizando Amazon Athena:
+El proyecto propone el diseño y despliegue de una **infraestructura cloud segura en Amazon Web Services (AWS)** para la organización ficticia **CloudFinance S.L.**, aplicando principios de **Zero Trust**, **defensa en profundidad** y los pilares del **AWS Well-Architected Framework**.
 
-Detección heurística de anomalías: Evaluación de indicadores de riesgo para calcular una puntuación (score) por dirección IP, basándose en la identificación de patrones anómalos (intentos de fuerza bruta, scraping o escalada de privilegios).
+---
 
-Análisis masivo de registros (logs): Procesamiento de grandes volúmenes de eventos procedentes de CloudFront, Application Load Balancer (ALB) y CloudTrail mediante consultas SQL serverless.
+# 🚀 Arquitectura del Sistema
 
-Monitorización y alertado: El panel de administración SOC (Security Operations Center) proporciona visibilidad interactiva sobre los incidentes, trazando cronológicamente las ráfagas de ataques y los bloqueos (ej. errores HTTP 403/401 masivos).
+La arquitectura implementada integra múltiples servicios de AWS para proporcionar seguridad, escalabilidad y observabilidad.
 
-🚀 Arquitectura Tecnológica
-El despliegue en AWS (cuyas plantillas de infraestructura se han gestionado externamente) se apoya en los siguientes componentes integrados en este código:
+### Componentes principales
 
-Aplicación Backend: Servidor EC2 ejecutando Python (Flask y Gunicorn) con NGINX operando como proxy inverso.
+**Backend Application**
+- Servidor **EC2** ejecutando una aplicación Python.
+- Framework **Flask** para la lógica web.
+- **Gunicorn** como servidor WSGI.
+- **NGINX** funcionando como proxy inverso.
 
-Gestión de Datos: Almacenamiento relacional en Amazon RDS (PostgreSQL) ubicado en subredes privadas, y repositorios de auditoría en Amazon S3 protegidos mediante cifrado AWS KMS.
+**Gestión de Datos**
+- **Amazon RDS (PostgreSQL)** para almacenamiento relacional.
+- Base de datos ubicada en **subredes privadas** para mayor aislamiento.
+- **Amazon S3** como repositorio de auditoría y almacenamiento de logs.
+- Cifrado mediante **AWS KMS**.
 
-Seguridad Perimetral y de Acceso: Uso de Application Load Balancer (ALB) para la distribución segura del tráfico y un sistema de control de acceso basado en roles (RBAC) para segmentar los privilegios entre los departamentos de Finanzas y TI.
+**Seguridad Perimetral**
+- **Application Load Balancer (ALB)** para distribución segura de tráfico.
+- Segmentación de privilegios mediante **RBAC (Role-Based Access Control)**.
+- Separación de accesos entre departamentos de **Finanzas** y **TI**.
 
-📂 Estructura del Código
-app.py: Núcleo de la aplicación web. Orquesta la lógica de negocio, la autenticación de usuarios y el enrutamiento principal.
+---
 
-sec_heuristic.py: Módulo íntegro de inteligencia de amenazas. Contiene la lógica de conexión con AWS y las consultas estructuradas para la detección de anomalías.
+# 🔍 Módulo de Detección Heurística y Threat Intelligence
 
-templates/: Plantillas HTML del frontend, incluyendo internal.html (interfaz del Dashboard SOC para la visualización de incidentes).
+El sistema incorpora una **capa de detección de anomalías basada en análisis de logs**, diseñada para identificar patrones de actividad maliciosa.
 
-static/: Recursos estáticos del lado del cliente (hojas de estilo CSS, scripts y recursos gráficos).
+### Capacidades principales
 
-requirements.txt: Dependencias de Python necesarias para replicar el entorno de ejecución.
+**Detección heurística de anomalías**
+- Evaluación de indicadores de riesgo por dirección IP.
+- Generación de un **score de riesgo** basado en patrones sospechosos como:
+  - intentos de fuerza bruta
+  - scraping automatizado
+  - enumeración de recursos
+  - escalada de privilegios
 
-📌 Nota académica: Por motivos estrictos de seguridad y cumplimiento de las mejores prácticas, todas las credenciales, variables de entorno (.env), claves criptográficas y detalles específicos de la cuenta de AWS han sido excluidos de este repositorio público.
+**Análisis masivo de logs**
+- Procesamiento de grandes volúmenes de eventos mediante **Amazon Athena**.
+- Consultas SQL serverless sobre registros generados por:
+  - **CloudFront**
+  - **Application Load Balancer**
+  - **AWS CloudTrail**
+
+**Monitorización y respuesta**
+- Panel interno de **SOC (Security Operations Center)**.
+- Visualización cronológica de incidentes.
+- Identificación de picos de ataques y patrones de bloqueo (ej. múltiples errores HTTP 401 / 403).
+
+---
+
+# 📂 Estructura del Proyecto
