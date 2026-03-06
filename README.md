@@ -1,30 +1,33 @@
-# TFG-AWS-Cybersecurity
-# CloudFinance - Plataforma Financiera Segura con IA en AWS
+TFG: Infraestructura Cloud Resiliente y Detección Heurística para Entornos Fintech
+Este repositorio contiene el código fuente y la configuración técnica desarrollada como parte del Trabajo de Fin de Grado (TFG) en Ciberseguridad/Ingeniería. El proyecto aborda el diseño y despliegue de una infraestructura segura en Amazon Web Services (AWS) para la organización ficticia CloudFinance S.L., aplicando los pilares del AWS Well-Architected Framework y estrategias de defensa en profundidad.
 
-**Trabajo de Fin de Grado (TFG)**
-**Tecnologías:** Python (Flask), AWS (Athena,EC2,KMS,Cloudwatch,CloudTrail,SNS,RDS, CloudFront, ALB, Elastic IP, VPC, Security Groups, IAM, Cognito, S3 Buckets), Inteligencia de Seguridad.
+🛡️ Módulo de Inteligencia de Amenazas y Detección Heurística
+El proyecto implementa una capa de seguridad activa orientada a la detección temprana y el análisis forense utilizando Amazon Athena:
 
-## 📋 Descripción del Proyecto
-Este repositorio contiene el código fuente de una plataforma financiera de alta seguridad diseñada para la nube. El sistema integra un **Módulo de Inteligencia de Seguridad (SIEM)** capaz de detectar amenazas en tiempo real analizando patrones de tráfico y logs de auditoría.
+Detección heurística de anomalías: Evaluación de indicadores de riesgo para calcular una puntuación (score) por dirección IP, basándose en la identificación de patrones anómalos (intentos de fuerza bruta, scraping o escalada de privilegios).
 
-## 🧠 Módulo de IA y Seguridad (Security Analytics)
-El proyecto implementa una capa de defensa proactiva utilizando **Amazon Athena** y análisis de comportamiento:
-* **Detección de Anomalías:** Algoritmos que puntúan (*scoring*) el riesgo de cada IP basándose en patrones de acceso (fuerza bruta, escaneos de puertos).
-* **Análisis de Logs en Tiempo Real:** Procesamiento de terabytes de logs de **AWS WAF** y **CloudTrail** mediante consultas SQL serverless.
-* **Respuesta Automatizada:** El panel de administración alerta visualmente sobre intentos de intrusión (Códigos 403/401 masivos).
+Análisis masivo de registros (logs): Procesamiento de grandes volúmenes de eventos procedentes de CloudFront, Application Load Balancer (ALB) y CloudTrail mediante consultas SQL serverless.
 
-## 🚀 Arquitectura Tecnológica
-El despliegue en AWS (infraestructura gestionada externamente) incluye:
-* **Backend:** Servidor EC2 con Python Flask y Gunicorn usando NGINX como proxy inverso.
-* **Datos:** RDS PostgreSQL (Subnet Privada) y S3 con cifrado KMS.
-* **Seguridad Perimetral:** Balanceador de Carga (ALB).
-* **Control de Acceso:** Sistema RBAC (Role-Based Access Control) granular para departamentos de Finanzas y TI.
+Monitorización y alertado: El panel de administración SOC (Security Operations Center) proporciona visibilidad interactiva sobre los incidentes, trazando cronológicamente las ráfagas de ataques y los bloqueos (ej. errores HTTP 403/401 masivos).
 
-## 📂 Estructura del Código
-* `app.py`: Núcleo de la aplicación. Orquesta la lógica de negocio y las consultas de seguridad.
-* `templates/internal.html`: **Dashboard SOC**. Interfaz que visualiza los ataques detectados por Athena.
-* `static/`: Recursos del lado del cliente.
-* `aws-config/`: (Opcional) Políticas JSON de IAM y definiciones del Dashboard.
+🚀 Arquitectura Tecnológica
+El despliegue en AWS (cuyas plantillas de infraestructura se han gestionado externamente) se apoya en los siguientes componentes integrados en este código:
 
----
-*Nota académica: Las credenciales, variables de entorno (.env) y la infraestructura de IA se han abstraído de este repositorio por motivos de seguridad.*
+Aplicación Backend: Servidor EC2 ejecutando Python (Flask y Gunicorn) con NGINX operando como proxy inverso.
+
+Gestión de Datos: Almacenamiento relacional en Amazon RDS (PostgreSQL) ubicado en subredes privadas, y repositorios de auditoría en Amazon S3 protegidos mediante cifrado AWS KMS.
+
+Seguridad Perimetral y de Acceso: Uso de Application Load Balancer (ALB) para la distribución segura del tráfico y un sistema de control de acceso basado en roles (RBAC) para segmentar los privilegios entre los departamentos de Finanzas y TI.
+
+📂 Estructura del Código
+app.py: Núcleo de la aplicación web. Orquesta la lógica de negocio, la autenticación de usuarios y el enrutamiento principal.
+
+sec_heuristic.py: Módulo íntegro de inteligencia de amenazas. Contiene la lógica de conexión con AWS y las consultas estructuradas para la detección de anomalías.
+
+templates/: Plantillas HTML del frontend, incluyendo internal.html (interfaz del Dashboard SOC para la visualización de incidentes).
+
+static/: Recursos estáticos del lado del cliente (hojas de estilo CSS, scripts y recursos gráficos).
+
+requirements.txt: Dependencias de Python necesarias para replicar el entorno de ejecución.
+
+📌 Nota académica: Por motivos estrictos de seguridad y cumplimiento de las mejores prácticas, todas las credenciales, variables de entorno (.env), claves criptográficas y detalles específicos de la cuenta de AWS han sido excluidos de este repositorio público.
