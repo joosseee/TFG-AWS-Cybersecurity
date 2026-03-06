@@ -121,7 +121,7 @@ El sistema incorpora una **capa de detección de anomalías basada en análisis 
 
 
 # 📂 Estructura del Proyecto
-.
+
 ├── app.py
 ├── sec_ia.py
 ├── templates/
