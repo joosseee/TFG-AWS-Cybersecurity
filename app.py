@@ -250,7 +250,6 @@ def health():
     return jsonify(out)
 
 # ========= Home =========
-# ========= Home (CON PLANTILLA) =========
 @app.get("/")
 def index():
     u = current_user()
@@ -259,9 +258,9 @@ def index():
     
     if u:
         # 1. Obtenemos los grupos de Cognito del usuario actual
-        groups = current_groups() # Esta función debe devolver un set o lista de grupos
+        groups = current_groups() 
         
-        # 2. Definimos quiénes son Staff para el TFG
+        # 2. Definimos quiénes son Staff
         staff_roles = {"admin-ti", "Analista-datos", "finanzas-lectura", "Finanzas-lectura"}
         
         # 3. Verificamos si el usuario pertenece a alguno de esos grupos
@@ -271,7 +270,7 @@ def index():
         is_client = current_cliente_id() is not None
     
    
-    # IMPORTANTE: Enviamos las variables al HTML
+   
     return render_template("index.html", 
                            user=u, 
                            is_staff=is_staff, 
@@ -296,7 +295,7 @@ def login():
         session["post_login_next"] = next_url
     return oauth.oidc.authorize_redirect(
         REDIRECT_URI,
-        scope=COGNITO_SCOPES,          # ⬅️ importante
+        scope=COGNITO_SCOPES,         
         code_challenge=chal,
         code_challenge_method="S256",
         nonce=nonce,
@@ -307,7 +306,7 @@ def callback():
     ver = session.pop("pkce_verifier", None)
     token = oauth.oidc.authorize_access_token(code_verifier=ver)
 
-     # --- DEBUG: mira qué scopes trae el access token ---
+     
     try:
         from base64 import urlsafe_b64decode
         import json
@@ -319,12 +318,12 @@ def callback():
             app.logger.warning("AccessToken sin scope 'phone'; actualizar teléfono fallará.")
     except Exception:
         pass
-    # --- fin DEBUG -
+
 
 
     # Valida id_token (iss/aud/exp/nonce) y obtén claims
     claims = oauth.oidc.parse_id_token(token, nonce=session.pop("oidc_nonce", None)) or {}
-    # UserInfo (opcional)
+    # UserInfo 
     try:
         userinfo = oauth.oidc.userinfo(token=token) or {}
     except Exception:
@@ -343,7 +342,7 @@ def callback():
     session["user"] = dict(userinfo)
     session["access_token"] = token.get("access_token")
 
-    # === FIX: asegura que exista fila en 'clientes' para el modelo email-only ===
+    
     try:
         email = claims.get("email")
         nombre = (userinfo.get("name") or claims.get("name") 
@@ -368,15 +367,15 @@ def logout():
     session.clear()
     meta = oauth.oidc.load_server_metadata()
     
-    # Derivamos el endpoint de logout de Cognito
+    # endpoint de logout de Cognito
     auth_ep = meta["authorization_endpoint"]
     base = auth_ep.rsplit("/oauth2/", 1)[0]
     logout_url = f"{base}/logout"
     
-    # LIMPIEZA TOTAL: .strip() quita espacios del .env y quote_plus codifica la URL
+
     safe_logout_uri = quote_plus(POST_LOGOUT_REDIRECT_URI.strip())
     
-    # Construcción de la URL de salida oficial de AWS
+    
     final_logout_path = f"{logout_url}?client_id={APP_CLIENT_ID}&logout_uri={safe_logout_uri}"
     
     return redirect(final_logout_path)
@@ -384,7 +383,6 @@ def logout():
 # ========= Portal interno =========
 @app.get("/internal")
 @login_required
-# He añadido 'finanzas-lectura' en minúscula también para mayor seguridad
 @require_groups("admin-ti", "Analista-datos", "Finanzas-lectura", "finanzas-lectura")
 def internal_home():
     return render_template("internal.html", groups=list(current_groups()))
@@ -419,7 +417,6 @@ def movimientos():
 @login_required
 @require_groups("admin-ti", "Analista-datos", "finanzas-lectura","Finanzas-lectura")
 def listar_informes():
-    # Consultamos la vista que une Informes con Clientes
     rows = db_select("""
         SELECT id, cliente, s3_path, tipo_informe, fecha_generado
         FROM v_informes
@@ -441,7 +438,7 @@ def listar_informes():
             "s3_key": r["s3_path"],
             "tipo_informe": r["tipo_informe"],
             "fecha": r["fecha_generado"].isoformat() if r["fecha_generado"] else None,
-            "download_url": url # Si es null, el frontend mostrará "no disponible"
+            "download_url": url 
         })
     return jsonify(out)
 
@@ -451,12 +448,10 @@ def listar_informes():
 @login_required
 @require_groups("admin-ti", "Analista-datos", "finanzas-lectura","Finanzas-lectura")
 def generar_informe():
-    # 1. Obtenemos datos del body JSON
     data = request.get_json(silent=True) or {}
     cliente_nombre = (data.get("cliente") or "").strip()
     tipo = (data.get("tipo") or "contable").strip()
 
-    # 2. Búsqueda HEURÍSTICA: Evitamos fallos por tildes o mayúsculas
     cliente_id = None
     if cliente_nombre:
         r = db_select("SELECT id FROM clientes WHERE nombre ILIKE %s", (f"%{cliente_nombre}%",))
@@ -465,7 +460,6 @@ def generar_informe():
     if not cliente_id:
         return jsonify({"error": f"No se encontró el cliente '{cliente_nombre}'. Revisa el nombre exacto."}), 404
 
-    # 3. Consultamos movimientos en RDS
     rows = db_select("""
         SELECT id, tipo_operacion, cantidad, fecha 
         FROM movimientos_financieros 
@@ -476,7 +470,6 @@ def generar_informe():
     if not rows:
         return jsonify({"error": "Este cliente no tiene movimientos registrados."}), 400
 
-    # 4. Generamos el CSV en memoria
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(["id", "tipo_operacion", "cantidad", "fecha"])
@@ -488,20 +481,15 @@ def generar_informe():
             _csv_cell(x["fecha"].isoformat() if x["fecha"] else "")
         ])
 
-    # 5. Definimos la ruta en S3 CUMPLIENDO con la política de prefijos
-    # Usamos 'processed/' para que la política de IAM permita el acceso
     prefix = f"processed/informes/clientes/{cliente_id}"
     key = f"{prefix}/informe_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.csv"
 
     try:
-        # Subida cifrada a S3 (SSE-KMS según tu .env)
         _s3_put_csv(key, buf.getvalue().encode("utf-8"))
         
-        # Guardamos en la tabla para que aparezca en el dashboard
         db_exec("INSERT INTO informes (cliente_id, s3_path, tipo_informe) VALUES (%s,%s,%s)", 
                 (cliente_id, key, tipo))
         
-        # Auditoría de acceso
         log_access("S3", f"GENERATE_REPORT {key}")
         
         return jsonify({
@@ -642,7 +630,6 @@ def client_required(fn):
 @client_required
 def perfil_get():
     u = current_user() or {}
-    # Escapa por si acaso
     email = (u.get("email") or "").replace("<","&lt;").replace(">","&gt;")
     phone = (u.get("phone_number")
              or (session.get("id_token_claims") or {}).get("phone_number")
@@ -703,7 +690,6 @@ def perfil_post():
     except cognito.exceptions.NotAuthorizedException as e:
         # El AccessToken ha caducado o no es válido.
         app.logger.warning(f"AccessToken caducado, redirigiendo a login: {e}")
-        # Redirigimos al login pasando 'next' para que vuelva al perfil tras loguearse
         return redirect(url_for("login", next=url_for("perfil_get")))
     except cognito.exceptions.InvalidParameterException as e:
         app.logger.error(f"Parámetro inválido al actualizar phone_number: {e}")
@@ -712,11 +698,9 @@ def perfil_post():
         app.logger.error(f"Error actualizando phone_number en Cognito: {e}")
         return ("No se pudo actualizar el teléfono en Cognito.", 500)
 
-    # --- Refleja en sesión para que se vea al volver a /perfil ---
     session.setdefault("user", {})["phone_number"] = phone
     session.setdefault("id_token_claims", {})["phone_number"] = phone
 
-    # --- Actualiza BBDD por email (best-effort) ---
     try:
         email = current_email()
         if email:
@@ -756,3 +740,4 @@ def trigger_iam_error():
 if __name__ == "__main__":
     # En prod: gunicorn -b 127.0.0.1:8000 app:app
     app.run(host="127.0.0.1", port=int(os.getenv("PORT", "8000")), debug=True)
+
