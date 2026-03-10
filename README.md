@@ -206,6 +206,7 @@ Por motivos de seguridad y buenas prácticas, **no se incluyen en este repositor
 - variables de entorno (`.env`)
 - identificadores de cuenta AWS
 - configuraciones sensibles de infraestructura
+- No se incluye todo el procedimiento de la arquitectura desplegada y de la seguridad de la misma ya que se encuentra en la memoria y se llevó a cabo con AWS
 
 La infraestructura fue desplegada mediante plantillas externas de automatización y configuraciones específicas de entorno.
 
